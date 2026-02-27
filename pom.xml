@@ -13,7 +13,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
 	<name>esientradas</name>
-	<description>Backend de venta de entradas</description>
+	<description>Ticketing backend for distributed ticketing system</description>
 	<url>https://github.com/SobrinoS29/distributed-ticketing-DBsystem.git</url>
 
 	<developers>
