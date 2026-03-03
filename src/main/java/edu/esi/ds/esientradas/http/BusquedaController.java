@@ -1,6 +1,7 @@
 package edu.esi.ds.esientradas.http;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
 
+import edu.esi.ds.esientradas.dto.DtoEntrada;
 import edu.esi.ds.esientradas.dto.DtoEspectaculo;
 import edu.esi.ds.esientradas.model.Escenario;
 import edu.esi.ds.esientradas.model.Espectaculo;
@@ -16,20 +18,43 @@ import edu.esi.ds.esientradas.services.BusquedaService;
 
 @RestController
 @RequestMapping("/busqueda")
+@CrossOrigin(origins = "*")  // Acepta todas las peticiones vengan de donde vengan "*", pero podríamos establecer las url que queramos
 public class BusquedaController {
 
     @Autowired
     private BusquedaService service;
 
     @GetMapping("/getEntradas")
-    public List<Entrada> getEntradas(@RequestParam Long espectaculoId) {
-        return this.service.getEntradas(espectaculoId);
-
+    public List<DtoEntrada> getEntradas(@RequestParam Long espectaculoId) {
+        List<Entrada> entradas = this.service.getEntradas(espectaculoId);
+        List<DtoEntrada> dtos = entradas.stream().map(e -> {
+            DtoEntrada dto = new DtoEntrada();
+            dto.setId(e.getId());
+            dto.setEstado(e.getEstado());
+            dto.setPrecio(e.getPrecio());
+            dto.setEspectaculo_id(e.getEspectaculo().getId());
+            return dto;
+        }).toList();
+        return dtos;
     }
 
     @GetMapping("/getEspectaculos")
     public List<DtoEspectaculo> getEspectaculos(@RequestParam String artista) {
         List<Espectaculo> espectaculos = this.service.getEspectaculos(artista);
+        List<DtoEspectaculo> dtos = espectaculos.stream().map(e -> {
+            DtoEspectaculo dto = new DtoEspectaculo();
+            dto.setId(e.getId());
+            dto.setArtista(e.getArtista());
+            dto.setFecha(e.getFecha());
+            dto.setEscenario(e.getEscenario().getNombre());
+            return dto;
+        }).toList();
+        return dtos;
+    }
+
+    @GetMapping("/getEspectaculos/{idEscenario}")
+    public List<DtoEspectaculo> getEspectaculos(@PathVariable Long idEscenario) {  // No es @RequestParam porque no es un parámetro de consulta, sino parte de la ruta url
+        List<Espectaculo> espectaculos = this.service.getEspectaculos(idEscenario);
         List<DtoEspectaculo> dtos = espectaculos.stream().map(e -> {
             DtoEspectaculo dto = new DtoEspectaculo();
             dto.setId(e.getId());

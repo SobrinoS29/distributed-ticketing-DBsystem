@@ -10,9 +10,9 @@ import edu.esi.ds.esientradas.model.Entrada;
 import edu.esi.ds.esientradas.model.Estado;
 
 public interface EntradaDao extends JpaRepository<Entrada, Long> {
-    List<Entrada> findByEspectaculoId(Long espectaculoId);
-
     @Query(value = "UPDATE Entrada e SET e.estado = :estado WHERE e.id = :idEntrada")
     @Modifying
-    void updateEstado(@Param("idEntrada") Long idEntrada, @Param("estado")Estado reservada);
+    void updateEstado(@Param("idEntrada") Long idEntrada, @Param("estado")Estado estado);
+
+    List<Entrada> findByEspectaculoId(Long espectaculoId);
 }
