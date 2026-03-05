@@ -28,7 +28,7 @@ public class BusquedaController {
     public List<DtoEntrada> getEntradas(@RequestParam Long espectaculoId) {
         List<Entrada> entradas = this.service.getEntradas(espectaculoId);
         List<DtoEntrada> dtos = entradas.stream().map(e -> {
-            DtoEntrada dto = new DtoEntrada();
+            DtoEntrada dto = new DtoEntrada(null, null, null, null);
             dto.setId(e.getId());
             dto.setEstado(e.getEstado());
             dto.setPrecio(e.getPrecio());
@@ -36,6 +36,23 @@ public class BusquedaController {
             return dto;
         }).toList();
         return dtos;
+    }
+
+    /*
+    @GetMapping("/getNumeroDeEntradas")
+    public Integer getNumeroDeEntradas(@RequestParam Long espectaculoId) {
+        return this.service.getNumeroDeEntradas(espectaculoId); 
+    }
+    
+    @GetMapping("/getEntradasLibres")
+    public Integer getEntradasLibres(@RequestParam Long espectaculoId) {
+        return this.service.getEntradasLibres(espectaculoId);
+    }
+    */
+
+   @GetMapping("/getNumeroDeEntradasComoDto")
+    public DtoEntrada getNumeroDeEntradasComoDto(@RequestParam Long espectaculoId) {
+        return this.service.getNumeroDeEntradasComoDto(espectaculoId);
     }
 
     @GetMapping("/getEspectaculos")

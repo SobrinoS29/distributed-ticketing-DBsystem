@@ -10,6 +10,7 @@ import edu.esi.ds.esientradas.model.Escenario;
 import edu.esi.ds.esientradas.model.Espectaculo;
 import edu.esi.ds.esientradas.dao.EscenarioDao;
 import edu.esi.ds.esientradas.dao.EspectaculoDao;
+import edu.esi.ds.esientradas.dto.DtoEntrada;
 import edu.esi.ds.esientradas.dao.EntradaDao;
 
 @Service
@@ -40,4 +41,28 @@ public class BusquedaService {
         return this.entradaDao.findByEspectaculoId(espectaculoId);
     }
 
+    /*
+    public Integer getNumeroDeEntradas(Long espectaculoId) {
+        return this.entradaDao.countByEspectaculoId(espectaculoId);
+    }
+
+    public Integer getEntradasLibres(Long espectaculoId) {
+        return this.entradaDao.countByEspectaculoIdAndEstado(espectaculoId, Estado.DISPONIBLE);
+    }
+    */
+
+    public DtoEntrada getNumeroDeEntradasComoDto(Long espectaculoId) {
+        List<Object[]> resultado = this.entradaDao.getNumeroDeEntradasComoDto(espectaculoId);
+        if (resultado.isEmpty()) {
+            return new DtoEntrada(0, 0, 0, 0);
+        }
+        Object[] obj = resultado.get(0);
+        DtoEntrada dto = new DtoEntrada(
+            ((Number) obj[0]).intValue(),  // total
+            ((Number) obj[1]).intValue(),  // libres
+            ((Number) obj[2]).intValue(),  // reservadas
+            ((Number) obj[3]).intValue()   // vendidas
+        );
+        return dto;
+    }
 }
