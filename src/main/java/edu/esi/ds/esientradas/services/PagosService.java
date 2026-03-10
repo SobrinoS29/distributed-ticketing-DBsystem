@@ -3,9 +3,12 @@ package edu.esi.ds.esientradas.services;
 import java.time.Instant;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.stripe.Stripe;
+import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 
@@ -20,6 +23,11 @@ public class PagosService {
     private ConfiguracionDao configuracionDao;  // Coger la Secret Key de la BD para preparar el pago con la pasarela de pago (Stripe)
     @Autowired
     private PagoDao pagoDao;  // Guardar en la BD el pago preparado, con su ID, cantidad, etc.
+
+    @Autowired
+    private PDFService pdfService;
+    @Autowired
+    private EmailService emailService;
 
     public String prepararPago(Long centimos) throws Exception {  // Cogeremos la Secret Key del a BD y nos comunicaremos con la pasarela de pago (Stripe) para preparar el pago, utilizando la información del pago que se pasa en el body del request
         Stripe.apiKey = this.configuracionDao.findByClave("STRIPE_SECRET_KEY");
@@ -47,6 +55,21 @@ public class PagosService {
         pago.setPaymentMethodId(paymentIntent.getPaymentMethod());
         pago.setLivemode(paymentIntent.getLivemode());
         return pago;
+    }
+
+    public void confirmarPago(String idPago) throws StripeException {  // Nos comunicaremos con la pasarela de pago (Stripe) para confirmar el pago, utilizando el ID del pago que se pasa en el body del request
+        Stripe.apiKey = this.configuracionDao.findByClave("STRIPE_SECRET_KEY");
+        PaymentIntent paymentIntent = PaymentIntent.retrieve(idPago);  // Recuperamos el PaymentIntent de Stripe utilizando el ID del pago para comprobar su estado real
+
+        Pago pago = estructuraPago(paymentIntent);
+        if (pago != null  && "succeeded".equals(paymentIntent.getStatus())) {
+            pagoDao.updatePagoState(pago);
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al confirmar el pago con Stripe Id: " + paymentIntent.getId() + ", estado: " + paymentIntent.getStatus());
+        }
+        
+        //this.pdfService.confirmarPago(idPago);
+        //this.emailService.enviarConfirmacionPago(pago);
     }
 
 }

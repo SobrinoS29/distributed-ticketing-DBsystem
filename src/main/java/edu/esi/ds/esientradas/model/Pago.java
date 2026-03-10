@@ -33,7 +33,6 @@ public class Pago {
     private Boolean livemode;
 
     public Pago() {
-    
     }
 
     public Long getId() {

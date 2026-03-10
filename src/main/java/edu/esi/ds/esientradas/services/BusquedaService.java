@@ -52,11 +52,11 @@ public class BusquedaService {
     */
 
     public DtoEntrada getNumeroDeEntradasComoDto(Long espectaculoId) {
-        List<Object[]> resultado = this.entradaDao.getNumeroDeEntradasComoDto(espectaculoId);
-        if (resultado.isEmpty()) {
+        Object resultado = this.entradaDao.getNumeroDeEntradasComoDto(espectaculoId);
+        if (resultado == null) {
             return new DtoEntrada(0, 0, 0, 0);
         }
-        Object[] obj = resultado.get(0);
+        Object[] obj = (Object[]) resultado;
         DtoEntrada dto = new DtoEntrada(
             ((Number) obj[0]).intValue(),  // total
             ((Number) obj[1]).intValue(),  // libres

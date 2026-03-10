@@ -3,6 +3,7 @@ package edu.esi.ds.esientradas.http;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +13,7 @@ import edu.esi.ds.esientradas.services.UsuariosService;
 
 @RestController
 @RequestMapping("/compra")
+@CrossOrigin(origins = "*")  // Acepta todas las peticiones vengan de donde vengan "*", pero podríamos establecer las url que queramos
 public class CompraController {
 
     @Autowired

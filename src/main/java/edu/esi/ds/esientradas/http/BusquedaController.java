@@ -28,11 +28,7 @@ public class BusquedaController {
     public List<DtoEntrada> getEntradas(@RequestParam Long espectaculoId) {
         List<Entrada> entradas = this.service.getEntradas(espectaculoId);
         List<DtoEntrada> dtos = entradas.stream().map(e -> {
-            DtoEntrada dto = new DtoEntrada(null, null, null, null);
-            dto.setId(e.getId());
-            dto.setEstado(e.getEstado());
-            dto.setPrecio(e.getPrecio());
-            dto.setEspectaculo_id(e.getEspectaculo().getId());
+            DtoEntrada dto = new DtoEntrada(0, 0, 0, 0);
             return dto;
         }).toList();
         return dtos;

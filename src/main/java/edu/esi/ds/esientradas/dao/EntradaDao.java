@@ -31,5 +31,5 @@ public interface EntradaDao extends JpaRepository<Entrada, Long> {
                 CAST(SUM(CASE WHEN estado='VENDIDA' THEN 1 ELSE 0 END) AS SIGNED) AS vendidas
             FROM entrada
             WHERE espectaculo_id = :espectaculoId""", nativeQuery = true)
-    List<Object[]> getNumeroDeEntradasComoDto(@Param("espectaculoId") Long espectaculoId);
+    Object getNumeroDeEntradasComoDto(@Param("espectaculoId") Long espectaculoId);
 }
