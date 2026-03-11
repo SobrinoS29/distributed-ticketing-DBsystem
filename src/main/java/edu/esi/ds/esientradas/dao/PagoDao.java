@@ -17,5 +17,5 @@ public interface PagoDao extends JpaRepository<Pago, Long> {
         UPDATE pago
             SET status = :#{#pago.status}, payment_method_id = :#{#pago.paymentMethodId}, livemode = :#{#pago.livemode}
             WHERE payment_intent_id = :#{#pago.paymentIntentId}""", nativeQuery = true)
-    void updatePagoState(Pago pago);  // Método para actualizar el estado del pago en la BD después de confirmarlo con Stripe
+    int updatePagoState(Pago pago);  // Método para actualizar el estado del pago en la BD después de confirmarlo con Stripe
 }

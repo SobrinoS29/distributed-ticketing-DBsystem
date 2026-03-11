@@ -32,10 +32,10 @@ public class PagosController {
     }
 
     @PostMapping("/confirmarPago")  // POST /pago/confirmarPago
-    public void confirmarPago(@RequestBody Map<String, Object> paymentIntent) {  // Confirmar el pago con Stripe y actualizar la BD
+    public int confirmarPago(@RequestBody Map<String, Object> paymentIntent) {  // Confirmar el pago con Stripe y actualizar la BD
         String idPago = (String) paymentIntent.get("id");
         try {
-            this.pagosService.confirmarPago(idPago);
+            return this.pagosService.confirmarPago(idPago);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al confirmar el pago: " + e.getMessage(), e);
         }

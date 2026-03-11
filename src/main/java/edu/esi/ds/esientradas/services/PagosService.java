@@ -57,19 +57,21 @@ public class PagosService {
         return pago;
     }
 
-    public void confirmarPago(String idPago) throws StripeException {  // Nos comunicaremos con la pasarela de pago (Stripe) para confirmar el pago, utilizando el ID del pago que se pasa en el body del request
+    public int confirmarPago(String idPago) throws StripeException {  // Nos comunicaremos con la pasarela de pago (Stripe) para confirmar el pago, utilizando el ID del pago que se pasa en el body del request
+        int intConfirm = -1;
         Stripe.apiKey = this.configuracionDao.findByClave("STRIPE_SECRET_KEY");
         PaymentIntent paymentIntent = PaymentIntent.retrieve(idPago);  // Recuperamos el PaymentIntent de Stripe utilizando el ID del pago para comprobar su estado real
 
         Pago pago = estructuraPago(paymentIntent);
         if (pago != null  && "succeeded".equals(paymentIntent.getStatus())) {
-            pagoDao.updatePagoState(pago);
+            intConfirm = pagoDao.updatePagoState(pago);
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al confirmar el pago con Stripe Id: " + paymentIntent.getId() + ", estado: " + paymentIntent.getStatus());
         }
         
         //this.pdfService.confirmarPago(idPago);
         //this.emailService.enviarConfirmacionPago(pago);
+        return intConfirm;
     }
 
 }
