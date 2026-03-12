@@ -39,16 +39,17 @@ public class BusquedaController {
     public Integer getNumeroDeEntradas(@RequestParam Long espectaculoId) {
         return this.service.getNumeroDeEntradas(espectaculoId); 
     }
-    
-    @GetMapping("/getEntradasLibres")
-    public Integer getEntradasLibres(@RequestParam Long espectaculoId) {
-        return this.service.getEntradasLibres(espectaculoId);
-    }
     */
 
    @GetMapping("/getNumeroDeEntradasComoDto")
     public DtoEntrada getNumeroDeEntradasComoDto(@RequestParam Long espectaculoId) {
         return this.service.getNumeroDeEntradasComoDto(espectaculoId);
+    }
+
+    
+    @GetMapping("/getEntradasLibresByZona")
+    public List<Object[]> getEntradasLibresByZona(@RequestParam Long espectaculoId, @RequestParam Integer zona) {
+        return this.service.getEntradasLibresByZona(espectaculoId, zona);
     }
 
     @GetMapping("/getEspectaculos")
@@ -82,7 +83,7 @@ public class BusquedaController {
     @GetMapping("/getEscenarios")
     public List<Escenario> getEscenarios() {
         return this.service.getEscenarios();
-    }   
+    }
 
     @GetMapping("/saludar/{nombre}")
     public String saludar(@PathVariable String nombre, @RequestParam String apellido) {

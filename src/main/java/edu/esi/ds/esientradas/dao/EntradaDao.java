@@ -24,7 +24,7 @@ public interface EntradaDao extends JpaRepository<Entrada, Long> {
     */
 
     @Query(value = """
-            SELECT 
+            SELECT
                 CAST(COUNT(*) AS SIGNED) as total,  # COUNT(*) devuelve un Long, pero el DtoEntrada espera un Integer, por lo que hacemos un CAST a SIGNED para que devuelva un Integer. Esto es específico de MySQL, en otros motores de base de datos el CAST puede ser diferente.
                 CAST(SUM(CASE WHEN estado='DISPONIBLE' THEN 1 ELSE 0 END) AS SIGNED) AS libres,
                 CAST(SUM(CASE WHEN estado='RESERVADA' THEN 1 ELSE 0 END) AS SIGNED) AS reservadas,
@@ -32,4 +32,13 @@ public interface EntradaDao extends JpaRepository<Entrada, Long> {
             FROM entrada
             WHERE espectaculo_id = :espectaculoId""", nativeQuery = true)
     Object getNumeroDeEntradasComoDto(@Param("espectaculoId") Long espectaculoId);
+
+    @Query(value = """
+            SELECT e.id, e.precio, e.espectaculo_id, z.zona
+                FROM entrada AS e, de_zona AS z
+                WHERE e.espectaculo_id = :espectaculoId
+                    AND e.estado = 'DISPONIBLE'
+                    AND z.zona = :zona
+                    AND e.id = z.id""", nativeQuery = true)
+    List<Object[]> findByEspectaculoIdByZonaAndEstado(@Param("espectaculoId") Long espectaculoId, @Param("zona") Integer zona);
 }

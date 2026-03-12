@@ -45,10 +45,6 @@ public class BusquedaService {
     public Integer getNumeroDeEntradas(Long espectaculoId) {
         return this.entradaDao.countByEspectaculoId(espectaculoId);
     }
-
-    public Integer getEntradasLibres(Long espectaculoId) {
-        return this.entradaDao.countByEspectaculoIdAndEstado(espectaculoId, Estado.DISPONIBLE);
-    }
     */
 
     public DtoEntrada getNumeroDeEntradasComoDto(Long espectaculoId) {
@@ -64,5 +60,9 @@ public class BusquedaService {
             ((Number) obj[3]).intValue()   // vendidas
         );
         return dto;
+    }
+
+    public List<Object[]> getEntradasLibresByZona(Long espectaculoId, Integer zona) {
+        return this.entradaDao.findByEspectaculoIdByZonaAndEstado(espectaculoId, zona);
     }
 }
