@@ -16,17 +16,17 @@ import jakarta.transaction.Transactional;
 public class ReservasService {
     
     @Autowired
-    private EntradaDao dao;
+    private EntradaDao entradaDao;
 
     @Autowired
     private TokenDao tokenDao;
 
     @Transactional
-    public Long reservar(Long idEntrada, String sessionId){
+    public String reservar(Long idEntrada, String sessionId){
         if (idEntrada == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"ID de entrada no válido");
         }
-        Entrada entrada = this.dao.findById(idEntrada).orElseThrow(
+        Entrada entrada = this.entradaDao.findById(idEntrada).orElseThrow(
             ()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Entrada no encontrada"));
         if (entrada.getEstado() != Estado.DISPONIBLE){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Entrada no disponible");
@@ -38,7 +38,25 @@ public class ReservasService {
         token.setSessionId(sessionId);
         this.tokenDao.save(token);
 
-        this.dao.updateEstado(idEntrada, Estado.RESERVADA);
-        return entrada.getPrecio();
+        this.entradaDao.updateEstado(idEntrada, Estado.RESERVADA);
+        return token.getSessionId();
+    }
+
+    @Transactional
+    public String liberar(Long idEntrada, String sessionId){
+        if (idEntrada == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"ID de entrada no válido");
+        }
+        Entrada entrada = this.entradaDao.findById(idEntrada).orElseThrow(
+            ()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Entrada no encontrada"));
+        if (entrada.getEstado() != Estado.RESERVADA){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Entrada no reservada");
+        }
+        
+        if(this.tokenDao.deleteByEntradaIdAndSessionId(idEntrada, sessionId) == 1)  // Si se eliminó el token de reserva, se libera la entrada
+            this.entradaDao.updateEstado(idEntrada, Estado.DISPONIBLE);
+        else
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No se pudo liberar la entrada");
+        return sessionId;
     }
 }
