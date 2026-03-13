@@ -1,14 +1,17 @@
 package edu.esi.ds.esientradas.http;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -22,7 +25,7 @@ import jakarta.servlet.http.HttpSession;
 public class ReservasController {
 
     @Autowired
-    private ReservasService service;
+    private ReservasService reservasService;
     
     @PutMapping("/reservar")
     public String reservar(HttpSession session, @RequestBody Map<String, Object> body) {  // Devolveremos el OK y el token con body: { "entradaId" : 123, "token": "abcd" } 
@@ -36,7 +39,7 @@ public class ReservasController {
             sessionId = session.getId();
         
         try {
-            return this.service.reservar(entradaId, sessionId);
+            return this.reservasService.reservar(entradaId, sessionId);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al reservar la entrada: " + e.getMessage(), e);
         }
@@ -48,10 +51,15 @@ public class ReservasController {
         String sessionId = (String) body.get("token");
         
         try {
-            return this.service.liberar(entradaId, sessionId);
+            return this.reservasService.liberar(entradaId, sessionId);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al liberar la entrada: " + e.getMessage(), e);
         }
+    }
+
+    @GetMapping("/getTicketsFromToken")
+    public List<Object[]> getTicketsFromToken(@RequestParam String token) {  // Devolveremos los tickets completos
+        return this.reservasService.getTicketsFromToken(token);
     }
 }
 

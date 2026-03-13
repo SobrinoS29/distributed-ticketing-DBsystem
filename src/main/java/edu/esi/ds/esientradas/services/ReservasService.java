@@ -1,5 +1,7 @@
 package edu.esi.ds.esientradas.services;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -58,5 +60,9 @@ public class ReservasService {
         else
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No se pudo liberar la entrada");
         return sessionId;
+    }
+
+    public List<Object[]> getTicketsFromToken(String token) {
+        return this.tokenDao.getTicketsFromToken(token);
     }
 }
