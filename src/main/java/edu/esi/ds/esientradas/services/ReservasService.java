@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import edu.esi.ds.esientradas.dao.EntradaDao;
-import edu.esi.ds.esientradas.dao.TokenDao;
+import edu.esi.ds.esientradas.dao.TicketTokenDao;
 import edu.esi.ds.esientradas.model.Entrada;
 import edu.esi.ds.esientradas.model.Estado;
-import edu.esi.ds.esientradas.model.Token;
+import edu.esi.ds.esientradas.model.TicketToken;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -21,7 +21,7 @@ public class ReservasService {
     private EntradaDao entradaDao;
 
     @Autowired
-    private TokenDao tokenDao;
+    private TicketTokenDao ticketTokenDao;
 
     @Transactional
     public String reservar(Long idEntrada, String sessionId){
@@ -35,10 +35,10 @@ public class ReservasService {
         }
         //entrada.setEstado(Estado.RESERVADA);
         //this.dao.save(entrada);
-        Token token = new Token();
+        TicketToken token = new TicketToken();
         token.setEntrada(entrada);
         token.setSessionId(sessionId);
-        this.tokenDao.save(token);
+        this.ticketTokenDao.save(token);
 
         this.entradaDao.updateEstado(idEntrada, Estado.RESERVADA);
         return token.getSessionId();
@@ -55,7 +55,7 @@ public class ReservasService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Entrada no reservada");
         }
         
-        if(this.tokenDao.deleteByEntradaIdAndSessionId(idEntrada, sessionId) == 1)  // Si se eliminó el token de reserva, se libera la entrada
+        if(this.ticketTokenDao.deleteByEntradaIdAndSessionId(idEntrada, sessionId) == 1)  // Si se eliminó el token de reserva, se libera la entrada
             this.entradaDao.updateEstado(idEntrada, Estado.DISPONIBLE);
         else
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No se pudo liberar la entrada");
@@ -63,6 +63,6 @@ public class ReservasService {
     }
 
     public List<Object[]> getTicketsFromToken(String token) {
-        return this.tokenDao.getTicketsFromToken(token);
+        return this.ticketTokenDao.getTicketsFromToken(token);
     }
 }

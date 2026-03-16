@@ -30,7 +30,7 @@ public abstract class Entrada {
 
     //@OneToOne(mappedBy = "entrada", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
     @Transient  // No generará una columna token en la BD
-    protected Token token;  // Relación 1:1 con Token
+    protected TicketToken token;  // Relación 1:1 con Token
 
     public Long getId() {
         return id;
@@ -57,10 +57,10 @@ public abstract class Entrada {
     public void setPrecio(Long precio) {
         this.precio = precio;
     }
-    public Token getToken() {
+    public TicketToken getToken() {
         return token;
     }
-    public void setToken(Token token) {
+    public void setToken(TicketToken token) {
         this.token = token;
     }
 }

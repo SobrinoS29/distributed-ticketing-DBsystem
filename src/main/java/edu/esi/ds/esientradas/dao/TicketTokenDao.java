@@ -8,22 +8,22 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-import edu.esi.ds.esientradas.model.Token;
+import edu.esi.ds.esientradas.model.TicketToken;
 
-public interface TokenDao extends JpaRepository<Token, String> {
+public interface TicketTokenDao extends JpaRepository<TicketToken, String> {
 
     @Transactional
     @Modifying
     @Query(value = """
         DELETE
-        FROM token
+        FROM ticket_token
         WHERE session_id = :sessionId
             AND entrada_id = :idEntrada""", nativeQuery = true)
     int deleteByEntradaIdAndSessionId(@Param("idEntrada") Long idEntrada, @Param("sessionId") String sessionId);  // Método para eliminar el token de reserva cuando se libera una entrada
     
      @Query(value = """
             SELECT t.entrada_id, e.precio, z.zona, p.fila, p.columna, p.planta, e.espectaculo_id, s.escenario_id
-                FROM token AS t
+                FROM ticket_token AS t
                 JOIN entrada AS e 
                     ON t.entrada_id = e.id
                 JOIN de_zona AS z 

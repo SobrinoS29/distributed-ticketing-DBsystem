@@ -17,7 +17,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Column;
 
 @Entity
-public class Token {
+public class TicketToken {
     @Id @Column(length = 36)
     private String valor;
 
@@ -28,7 +28,7 @@ public class Token {
     private String sessionId;
     private java.time.LocalDateTime hora;  // Hora de creación del token
 
-    public Token() {
+    public TicketToken() {
         this.valor = UUID.randomUUID().toString();  // Con @Id creamos nosotros el valor del token, sin embargo con @GeneratedValue sería la BD quien lo haría
         this.hora = java.time.LocalDateTime.now();
     }
