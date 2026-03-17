@@ -5,6 +5,7 @@ package edu.esi.ds.esientradas.services;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -41,12 +42,12 @@ public class EmailService {
         }
 
         String userName = (userInfoEmail != null && userInfoEmail.length > 0 && userInfoEmail[0] != null)
-                ? String.valueOf(userInfoEmail[0]).trim()
-                : "Cliente";
+            ? String.valueOf(userInfoEmail[0]).trim()
+            : "Cliente";
 
         String userEmail = (userInfoEmail != null && userInfoEmail.length > 1 && userInfoEmail[1] != null)
-                ? String.valueOf(userInfoEmail[1]).trim()
-                : "";
+            ? String.valueOf(userInfoEmail[1]).trim()
+            : "";
 
         if (userEmail.isBlank()) {
             throw new IllegalArgumentException("El email del usuario es obligatorio para enviar la confirmación.");
@@ -62,7 +63,7 @@ public class EmailService {
 
         Map<String, String> sender = new HashMap<>();
         sender.put("name", "ESI Entradas");
-        sender.put("email", "esiEntradas@localhost.com");
+        sender.put("email", "javiermotor11@gmail.com");
 
         Map<String, String> to = new HashMap<>();
         to.put("email", userEmail);
@@ -81,6 +82,9 @@ public class EmailService {
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new RuntimeException("Error sending email: " + response.getBody());
             }
+        } catch (HttpStatusCodeException e) {
+            String detalle = e.getResponseBodyAsString();
+            throw new RuntimeException("No se pudo enviar el email a Brevo. HTTP " + e.getStatusCode().value() + ": " + detalle, e);
         } catch (RestClientException e) {
             throw new RuntimeException("No se pudo enviar el email a Brevo", e);
         }
@@ -146,7 +150,7 @@ public class EmailService {
     }
 
     private String formatearEuros(int centimos) {
-        NumberFormat formato = NumberFormat.getCurrencyInstance(Locale.of("es", "ES"));
+        NumberFormat formato = NumberFormat.getCurrencyInstance(new Locale("es", "ES"));
         return formato.format(centimos / 100.0);
     }
 
