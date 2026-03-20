@@ -1,10 +1,12 @@
-// Como solo nos comunicaremos desde el backend con el servicio de Brevo, solo necesitaríamos la clave privada
+// Integracion de envio de correos usando Mailgun desde backend
 
 package edu.esi.ds.esientradas.services;
 
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -13,9 +15,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.text.NumberFormat;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Base64;
 
 import edu.esi.ds.esientradas.dao.ConfiguracionDao;
 
@@ -23,71 +27,70 @@ import edu.esi.ds.esientradas.dao.ConfiguracionDao;
 public class EmailService {
 
     @Autowired
-    private ConfiguracionDao configuracionDao;  // Coger la API Key de la BD para comunicarnos con el servicio de Brevo
+    private ConfiguracionDao configuracionDao;
 
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
 
-    public void enviarEmailCompra(Object[] userInfoEmail, String entradasJson) {
-        String apiKey = this.configuracionDao.findByClave("BREVO_SECRET_KEY");
-        String apiUrl = this.configuracionDao.findByClave("BREVO_API_URL");
+    public int enviarEmailCompra(Object[] userInfoEmail, String entradasJson) {
+        String apiKey = this.configuracionDao.findByClave("MAILGUN_API_KEY");
+        String baseUrl = this.configuracionDao.findByClave("MAILGUN_BASE_URL");
+        String domain = this.configuracionDao.findByClave("MAILGUN_DOMAIN");
+        String fromEmail = this.configuracionDao.findByClave("MAILGUN_FROM_EMAIL");
+        String fromName = this.configuracionDao.findByClave("MAILGUN_FROM_NAME");
 
         if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException("Falta configuración: BREVO_SECRET_KEY");
+            throw new IllegalStateException("Falta configuración: MAILGUN_API_KEY");
         }
-        if (apiUrl == null || apiUrl.isBlank()) {
-            throw new IllegalStateException("Falta configuración: BREVO_API_URL");
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new IllegalStateException("Falta configuración: MAILGUN_BASE_URL");
         }
+        if (domain == null || domain.isBlank()) {
+            throw new IllegalStateException("Falta configuración: MAILGUN_DOMAIN");
+        }
+        if (fromEmail == null || fromEmail.isBlank()) {
+            throw new IllegalStateException("Falta configuración: MAILGUN_FROM_EMAIL");
+        }
+        String apiUrl = baseUrl.endsWith("/") ? baseUrl + domain + "/messages" : baseUrl + "/" + domain + "/messages";
+        String remitenteNombre = (fromName == null || fromName.isBlank()) ? "ESI Entradas" : fromName;
 
-        String userName = (userInfoEmail != null && userInfoEmail.length > 0 && userInfoEmail[0] != null)
-            ? String.valueOf(userInfoEmail[0]).trim()
-            : "Cliente";
-
-        String userEmail = (userInfoEmail != null && userInfoEmail.length > 1 && userInfoEmail[1] != null)
-            ? String.valueOf(userInfoEmail[1]).trim()
-            : "";
+        String userName = (userInfoEmail.length > 0 && userInfoEmail[0] != null) ? userInfoEmail[0].toString() : "Cliente";
+        String userEmail = (userInfoEmail.length > 1 && userInfoEmail[1] != null) ? userInfoEmail[1].toString() : "";
 
         if (userEmail.isBlank()) {
             throw new IllegalArgumentException("El email del usuario es obligatorio para enviar la confirmación.");
         }
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("api-key", apiKey);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        String auth = Base64.getEncoder().encodeToString(("api:" + apiKey).getBytes(StandardCharsets.UTF_8));
+        headers.set(HttpHeaders.AUTHORIZATION, "Basic " + auth);
 
         String htmlContent = construirHtmlCompra(userName, entradasJson);
 
-        Map<String, Object> body = new HashMap<>();
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("from", remitenteNombre + " <" + fromEmail + ">");
+        body.add("to", userEmail);
+        body.add("subject", "Confirmacion de compra - ESI Entradas");
+        body.add("html", htmlContent);
 
-        Map<String, String> sender = new HashMap<>();
-        sender.put("name", "ESI Entradas");
-        sender.put("email", "javiermotor11@gmail.com");
-
-        Map<String, String> to = new HashMap<>();
-        to.put("email", userEmail);
-        to.put("name", userName);
-
-        body.put("sender", sender);
-        body.put("to", List.of(to));
-        body.put("subject", "Confirmación de compra - ESI Entradas");
-        body.put("htmlContent", htmlContent);
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
         try {
             @SuppressWarnings("null")
             ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, request, String.class);
             if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new RuntimeException("Error sending email: " + response.getBody());
+                throw new RuntimeException("Error enviando email con Mailgun: " + response.getBody());
             }
         } catch (HttpStatusCodeException e) {
             String detalle = e.getResponseBodyAsString();
-            throw new RuntimeException("No se pudo enviar el email a Brevo. HTTP " + e.getStatusCode().value() + ": " + detalle, e);
+            throw new RuntimeException("No se pudo enviar el email con Mailgun. HTTP " + e.getStatusCode().value() + ": " + detalle, e);
         } catch (RestClientException e) {
-            throw new RuntimeException("No se pudo enviar el email a Brevo", e);
+            throw new RuntimeException("No se pudo enviar el email con Mailgun", e);
         }
+        return 0;
     }
 
     private String construirHtmlCompra(String userName, String entradasJson) {

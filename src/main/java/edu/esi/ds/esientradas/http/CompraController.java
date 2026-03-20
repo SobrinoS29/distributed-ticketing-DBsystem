@@ -3,11 +3,15 @@ package edu.esi.ds.esientradas.http;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +50,18 @@ public class CompraController {
         
         
 */     // Aquí iría la lógica para procesar la compra utilizando el sessionId y el userToken,
+
+    @GetMapping("/checkUserToken")
+    public String checkToken(@RequestParam String userToken) {
+        if(userToken == null || userToken.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error 400: Token is required");
+        }
+        String userCheck = this.usuariosService.checkUserToken(userToken);
+        if(userCheck == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Error 401: Invalid token");
+        }
+        return userCheck;
+    }
 
     @PostMapping("/enviarEmailCompra")
     public void enviarEmailCompra(@RequestBody Map<String, Object> payload) throws JsonProcessingException {
