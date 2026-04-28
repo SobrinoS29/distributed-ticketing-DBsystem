@@ -28,30 +28,30 @@ public class ReservasController {
     private ReservasService reservasService;
     
     @PutMapping("/reservar")
-    public String reservar(HttpSession session, @RequestBody Map<String, Object> body) {  // Devolveremos el OK y el token con body: { "entradaId" : 123, "token": "abcd" } 
+    public String reservar(HttpSession session, @RequestBody Map<String, Object> body) {  // Devolveremos el OK y el token con body: { "entradaId" : 123, "ticketToken": "abcd" } 
         Long entradaId = ((Number) body.get("entradaId")).longValue();
-        String token = (String) body.get("token");
-        String sessionId;
+        String tokenReserva = (String) body.get("tokenReserva");
+        String ticketToken;
 
-        if (token != null && !token.isEmpty())  // Si ya tiene token de reserva previo, agrupa bajo el mismo sessionId
-            sessionId = token;
+        if (tokenReserva != null && !tokenReserva.isEmpty())  // Si ya tiene token de reserva previo, agrupa bajo el mismo sessionId
+            ticketToken = tokenReserva;
         else
-            sessionId = session.getId();
+            ticketToken = session.getId();
         
         try {
-            return this.reservasService.reservar(entradaId, sessionId);
+            return this.reservasService.reservar(entradaId, ticketToken);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al reservar la entrada: " + e.getMessage(), e);
         }
     }
 
     @PutMapping("/liberar")
-    public String liberar(HttpSession session, @RequestBody Map<String, Object> body) {  // Devolveremos el OK y el token
+    public String liberar(HttpSession session, @RequestBody Map<String, Object> body) {  // Devolveremos el OK y el ticketToken
         Long entradaId = ((Number) body.get("entradaId")).longValue();
-        String sessionId = (String) body.get("token");
+        String tokenReserva = (String) body.get("tokenReserva");
         
         try {
-            return this.reservasService.liberar(entradaId, sessionId);
+            return this.reservasService.liberar(entradaId, tokenReserva);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al liberar la entrada: " + e.getMessage(), e);
         }

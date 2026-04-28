@@ -40,23 +40,23 @@ public class CompraController {
         
     }
 /* @PutMapping("/comprar")  // POST /compra/comprar
-    public String comprar(HttpSession session, HttpServerResponse response, @RequestParam String userToken) throws IOException {
+    public String comprar(HttpSession session, HttpServerResponse response, @RequestParam String sessionToken) throws IOException {
     String sessionId = session.getId();
-        if(userToken == null || userToken.isEmpty()) {
+        if(sessionToken == null || sessionToken.isEmpty()) {
             response.sendRedirect("http://www.uclm.es/")
             return null;
         }
-        return this.usuariosService.checkToken(userToken);
+        return this.usuariosService.checkToken(sessionToken);
         
         
-*/     // Aquí iría la lógica para procesar la compra utilizando el sessionId y el userToken,
+*/     // Aquí iría la lógica para procesar la compra utilizando el sessionId y el sessionToken,
 
     @GetMapping("/checkUserToken")
-    public String checkToken(@RequestParam String userToken) {
-        if(userToken == null || userToken.isEmpty()) {
+    public String checkToken(@RequestParam String sessionToken) {
+        if(sessionToken == null || sessionToken.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error 400: Token is required");
         }
-        String userCheck = this.usuariosService.checkUserToken(userToken);
+        String userCheck = this.usuariosService.checkUserToken(sessionToken);
         if(userCheck == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Error 401: Invalid token");
         }
@@ -65,7 +65,7 @@ public class CompraController {
 
     @PostMapping("/enviarEmailCompra")
     public void enviarEmailCompra(@RequestBody Map<String, Object> payload) throws JsonProcessingException {
-        String tokenUser = (String) payload.get("userToken");
+        String tokenUser = (String) payload.get("sessionToken");
         Object entradasSeleccionadas = payload.get("ticketsSeleccionados");
         
         String entradasJson = objectMapper.writeValueAsString(entradasSeleccionadas);
