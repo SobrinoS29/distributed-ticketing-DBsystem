@@ -17,9 +17,9 @@ public interface TicketTokenDao extends JpaRepository<TicketToken, String> {
     @Query(value = """
         DELETE
         FROM ticket_token
-        WHERE session_id = :sessionId
+        WHERE token_reserva = :ticketToken
             AND entrada_id = :idEntrada""", nativeQuery = true)
-    int deleteByEntradaIdAndSessionId(@Param("idEntrada") Long idEntrada, @Param("sessionId") String sessionId);  // Método para eliminar el token de reserva cuando se libera una entrada
+    int deleteByEntradaIdAndTokenReserva(@Param("idEntrada") Long idEntrada, @Param("ticketToken") String ticketToken);  // Método para eliminar el token de reserva cuando se libera una entrada
     
      @Query(value = """
             SELECT t.entrada_id, e.precio, z.zona, p.fila, p.columna, p.planta, e.espectaculo_id, s.escenario_id
@@ -32,6 +32,14 @@ public interface TicketTokenDao extends JpaRepository<TicketToken, String> {
                     ON e.id = p.id
                 JOIN espectaculo AS s 
                     ON e.espectaculo_id = s.id
-                WHERE t.session_id = :token""", nativeQuery = true)
-    List<Object[]> getTicketsFromToken(@Param("token") String token);
+                WHERE t.token_reserva = :ticketToken""", nativeQuery = true)
+    List<Object[]> getTicketsFromToken(@Param("ticketToken") String ticketToken);
+
+    @Transactional
+    @Modifying
+    @Query(value ="""
+        UPDATE ticket_token
+        SET user_token = :newUserToken
+        WHERE token_reserva = :ticketToken""", nativeQuery = true)
+    int adoptReservations(@Param("ticketToken") String ticketToken, @Param("newUserToken") String newUserToken);  // Adopta reservas bajo el nuevo userToken del usuario logeado
 }

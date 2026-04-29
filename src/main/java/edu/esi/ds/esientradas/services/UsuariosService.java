@@ -9,19 +9,20 @@ public class UsuariosService {  // Servicio para interactuar con el microservici
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public Object[] getUserInfoEmail(String sessionToken) {
+    public Object[] getUserInfoEmail(String userToken) {
         String url = UriComponentsBuilder
             .fromUriString("http://localhost:8081/external/getUserInfoEmail")
-            .queryParam("sessionToken", sessionToken)
+            .queryParam("userToken", userToken)
             .toUriString();
 
-        return restTemplate.getForObject(url, Object[].class);
+        Object[] response = restTemplate.getForObject(url, Object[].class);
+        return (response != null && response[0] instanceof java.util.List<?> list) ? list.toArray(): null;
     }
 
-    public String checkUserToken(String sessionToken) {
+    public String checkUserToken(String userToken) {
         String url = UriComponentsBuilder
             .fromUriString("http://localhost:8081/external/checkUserToken")
-            .queryParam("sessionToken", sessionToken)
+            .queryParam("userToken", userToken)
             .toUriString();
 
         return restTemplate.getForObject(url, String.class);

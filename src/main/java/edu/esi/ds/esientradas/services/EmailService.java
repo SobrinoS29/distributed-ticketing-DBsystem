@@ -108,7 +108,13 @@ public class EmailService {
             for (JsonNode entrada : array) {
                 int entradaId = entrada.path("entradaId").asInt(0);
                 int zona = entrada.path("zona").asInt(0);
-                int precioCentimos = entrada.path("precioCentimos").asInt(0);
+                int precioCentimos = entrada.hasNonNull("precioCentimos")
+                        ? entrada.path("precioCentimos").asInt(0)
+                        : entrada.path("precio").asInt(0);
+                int espectaculoId = entrada.path("espectaculoId").asInt(0);
+                int escenarioId = entrada.path("escenarioId").asInt(0);
+                String qrPayload = construirPayloadQr(entradaId, escenarioId, espectaculoId);
+                String qrUrl = generarUrlQr(qrPayload);
 
                 totalCentimos += precioCentimos;
                 totalEntradas++;
@@ -119,11 +125,16 @@ public class EmailService {
                         .append("<td style='padding:8px;border:1px solid #ddd;text-align:right;'>")
                         .append(formatearEuros(precioCentimos))
                         .append("</td>")
+                    .append("<td style='padding:6px;border:1px solid #ddd;text-align:center;vertical-align:middle;'>")
+                    .append("<img src='").append(qrUrl)
+                    .append("' alt='QR entrada ").append(entradaId)
+                    .append("' width='80' height='80' style='display:block;margin:0 auto;' />")
+                    .append("</td>")
                         .append("</tr>");
             }
         } catch (Exception e) {
             String escapedJson = escapeHtml(entradasJson == null || entradasJson.isBlank() ? "[]" : entradasJson);
-            filas.append("<tr><td colspan='3' style='padding:8px;border:1px solid #ddd;'><pre style='margin:0;'>")
+                filas.append("<tr><td colspan='4' style='padding:8px;border:1px solid #ddd;'><pre style='margin:0;'>")
                     .append(escapedJson)
                     .append("</pre></td></tr>");
         }
@@ -143,6 +154,7 @@ public class EmailService {
                 + "<th style='padding:8px;border:1px solid #ddd;text-align:left;'>Entrada ID</th>"
                 + "<th style='padding:8px;border:1px solid #ddd;text-align:left;'>Zona</th>"
                 + "<th style='padding:8px;border:1px solid #ddd;text-align:right;'>Precio</th>"
+                + "<th style='padding:8px;border:1px solid #ddd;text-align:center;'>QR</th>"
                 + "</tr>"
                 + "</thead>"
                 + "<tbody>" + filas + "</tbody>"
@@ -167,6 +179,19 @@ public class EmailService {
                 return "Grada Sur";
             default:
                 return "Zona " + zonaId;
+        }
+    }
+
+    private String construirPayloadQr(int entradaId, int escenarioId, int espectaculoId) {
+        return "entradaId=" + entradaId + "|escenarioId=" + escenarioId + "|espectaculoId=" + espectaculoId;
+    }
+
+    private String generarUrlQr(String contenido) {
+        try {
+            String encoded = java.net.URLEncoder.encode(contenido, "UTF-8");
+            return "https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=" + encoded;
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo generar la URL del QR", e);
         }
     }
 

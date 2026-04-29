@@ -25,7 +25,8 @@ public class TicketToken {
     @JoinColumn(name = "entrada_id", referencedColumnName = "id")
     private Entrada entrada;
     
-    private String sessionId;
+    private String tokenReserva;
+    private String userToken;
     private java.time.LocalDateTime hora;  // Hora de creación del token
 
     public TicketToken() {
@@ -45,17 +46,23 @@ public class TicketToken {
     public void setEntrada(Entrada entrada) {
         this.entrada = entrada;
     }
-    public String getSessionId() {
-        return sessionId;
+    public String getTokenReserva() {
+        return tokenReserva;
     }
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+    public void setTokenReserva(String tokenReserva) {
+        this.tokenReserva = tokenReserva;
     }
     public java.time.LocalDateTime getHora() {
         return hora;
     }
     public void setHora(java.time.LocalDateTime hora) {
         this.hora = hora;
+    }
+    public String getUserToken() {
+        return userToken;
+    }
+    public void setUserToken(String userToken) {
+        this.userToken = userToken;
     }
 
 }

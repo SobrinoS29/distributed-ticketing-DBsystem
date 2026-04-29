@@ -24,7 +24,7 @@ public class ReservasService {
     private TicketTokenDao ticketTokenDao;
 
     @Transactional
-    public String reservar(Long idEntrada, String sessionId){
+    public String reservar(Long idEntrada, String ticketToken, String userToken) {
         if (idEntrada == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"ID de entrada no válido");
         }
@@ -37,15 +37,16 @@ public class ReservasService {
         //this.dao.save(entrada);
         TicketToken token = new TicketToken();
         token.setEntrada(entrada);
-        token.setSessionId(sessionId);
+        token.setTokenReserva(ticketToken);
+        token.setUserToken(userToken);
         this.ticketTokenDao.save(token);
 
         this.entradaDao.updateEstado(idEntrada, Estado.RESERVADA);
-        return token.getSessionId();
+        return token.getTokenReserva() + "|" + token.getUserToken();
     }
 
     @Transactional
-    public String liberar(Long idEntrada, String sessionId){
+    public String liberar(Long idEntrada, String ticketToken){
         if (idEntrada == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"ID de entrada no válido");
         }
@@ -55,14 +56,22 @@ public class ReservasService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Entrada no reservada");
         }
         
-        if(this.ticketTokenDao.deleteByEntradaIdAndSessionId(idEntrada, sessionId) == 1)  // Si se eliminó el token de reserva, se libera la entrada
+        if(this.ticketTokenDao.deleteByEntradaIdAndTokenReserva(idEntrada, ticketToken) == 1)  // Si se eliminó el token de reserva, se libera la entrada
             this.entradaDao.updateEstado(idEntrada, Estado.DISPONIBLE);
         else
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No se pudo liberar la entrada");
-        return sessionId;
+        return ticketToken;
     }
 
-    public List<Object[]> getTicketsFromToken(String token) {
-        return this.ticketTokenDao.getTicketsFromToken(token);
+    public List<Object[]> getTicketsFromToken(String ticketToken) {
+        return this.ticketTokenDao.getTicketsFromToken(ticketToken);
+    }
+
+    @Transactional
+    public int adoptReservations(String ticketToken, String newUserToken) {
+        if (ticketToken == null || ticketToken.isEmpty() || newUserToken == null || newUserToken.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ticketToken y newUserToken son requeridos");
+        }
+        return this.ticketTokenDao.adoptReservations(ticketToken, newUserToken);
     }
 }

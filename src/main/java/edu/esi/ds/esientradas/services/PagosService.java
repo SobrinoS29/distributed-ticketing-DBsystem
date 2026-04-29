@@ -68,9 +68,6 @@ public class PagosService {
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al confirmar el pago con Stripe Id: " + paymentIntent.getId() + ", estado: " + paymentIntent.getStatus());
         }
-        
-        //this.pdfService.confirmarPago(idPago);
-        //this.emailService.enviarConfirmacionPago(pago);
         return intConfirm;
     }
 

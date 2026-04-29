@@ -28,18 +28,25 @@ public class ReservasController {
     private ReservasService reservasService;
     
     @PutMapping("/reservar")
-    public String reservar(HttpSession session, @RequestBody Map<String, Object> body) {  // Devolveremos el OK y el token con body: { "entradaId" : 123, "ticketToken": "abcd" } 
+    public String reservar(HttpSession session, @RequestBody Map<String, Object> body) {  // Traemos body: { "entradaId" : 123, "ticketToken": "abcd", "userToken": "efgh" }, y devolveremos el OK y el ticketToken + userToken
         Long entradaId = ((Number) body.get("entradaId")).longValue();
         String tokenReserva = (String) body.get("tokenReserva");
         String ticketToken;
+        String userTokenReserva = (String) body.get("userTokenReserva");  // Recibimos el token de sesión del usuario para asociarlo a la reserva y poder mostrar sus reservas activas posteriormente
+        String userToken;
 
         if (tokenReserva != null && !tokenReserva.isEmpty())  // Si ya tiene token de reserva previo, agrupa bajo el mismo sessionId
             ticketToken = tokenReserva;
         else
-            ticketToken = session.getId();
+            ticketToken = java.util.UUID.randomUUID().toString();  // Generamos un nuevo token de reserva para la nueva reserva
         
+        if(userTokenReserva != null && !userTokenReserva.isEmpty())  // Si el usuario ha iniciado sesión, se le asigna su token de sesión en lugar del sessionId para que pueda recuperar sus reservas desde cualquier dispositivo
+            userToken = userTokenReserva;
+        else
+            userToken = session.getId();
+
         try {
-            return this.reservasService.reservar(entradaId, ticketToken);
+            return this.reservasService.reservar(entradaId, ticketToken, userToken);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al reservar la entrada: " + e.getMessage(), e);
         }
@@ -58,8 +65,20 @@ public class ReservasController {
     }
 
     @GetMapping("/getTicketsFromToken")
-    public List<Object[]> getTicketsFromToken(@RequestParam String token) {  // Devolveremos los tickets completos
-        return this.reservasService.getTicketsFromToken(token);
+    public List<Object[]> getTicketsFromToken(@RequestParam String ticketToken) {  // Devolveremos los tickets completos
+        return this.reservasService.getTicketsFromToken(ticketToken);
+    }
+
+    @PutMapping("/adoptReservations")
+    public int adoptReservations(@RequestBody Map<String, Object> body) {  // Adoptar reservas anónimas bajo el nuevo userToken del usuario logeado
+        String ticketToken = (String) body.get("ticketToken");
+        String newUserToken = (String) body.get("newUserToken");
+        
+        try {
+            return this.reservasService.adoptReservations(ticketToken, newUserToken);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al adoptar las reservas: " + e.getMessage(), e);
+        }
     }
 }
 

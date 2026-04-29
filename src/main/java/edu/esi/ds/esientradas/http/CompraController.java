@@ -49,14 +49,14 @@ public class CompraController {
         return this.usuariosService.checkToken(sessionToken);
         
         
-*/     // Aquí iría la lógica para procesar la compra utilizando el sessionId y el sessionToken,
+*/     // Aquí iría la lógica para procesar la compra utilizando el sessionId y el userToken,
 
     @GetMapping("/checkUserToken")
-    public String checkToken(@RequestParam String sessionToken) {
-        if(sessionToken == null || sessionToken.isEmpty()) {
+    public String checkToken(@RequestParam String userToken) {
+        if(userToken == null || userToken.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error 400: Token is required");
         }
-        String userCheck = this.usuariosService.checkUserToken(sessionToken);
+        String userCheck = this.usuariosService.checkUserToken(userToken);
         if(userCheck == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Error 401: Invalid token");
         }
@@ -65,12 +65,12 @@ public class CompraController {
 
     @PostMapping("/enviarEmailCompra")
     public void enviarEmailCompra(@RequestBody Map<String, Object> payload) throws JsonProcessingException {
-        String tokenUser = (String) payload.get("sessionToken");
+        String userToken = (String) payload.get("userToken");
         Object entradasSeleccionadas = payload.get("ticketsSeleccionados");
         
         String entradasJson = objectMapper.writeValueAsString(entradasSeleccionadas);
 
-        Object[] userInfoEmail = this.usuariosService.getUserInfoEmail(tokenUser);  // Obtener la información para enviar el email del usuario a partir de su token para enviarlo al servicio de email
+        Object[] userInfoEmail = this.usuariosService.getUserInfoEmail(userToken);  // Obtener la información para enviar el email del usuario a partir de su token para enviarlo al servicio de email
         this.emailService.enviarEmailCompra(userInfoEmail, entradasJson);
     }
 }
