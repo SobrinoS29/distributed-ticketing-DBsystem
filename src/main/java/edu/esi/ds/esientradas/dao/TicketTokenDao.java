@@ -42,4 +42,11 @@ public interface TicketTokenDao extends JpaRepository<TicketToken, String> {
         SET user_token = :newUserToken
         WHERE token_reserva = :ticketToken""", nativeQuery = true)
     int adoptReservations(@Param("ticketToken") String ticketToken, @Param("newUserToken") String newUserToken);  // Adopta reservas bajo el nuevo userToken del usuario logeado
+
+    @Transactional
+    @Modifying
+    @Query(value = """
+        DELETE FROM ticket_token
+        WHERE token_reserva = :ticketToken""", nativeQuery = true)
+    int deleteExpiredTokens(@Param("ticketToken") String ticketToken);  // Elimina tokens expirados (TTL)
 }

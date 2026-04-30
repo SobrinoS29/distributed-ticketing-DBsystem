@@ -80,5 +80,11 @@ public class ReservasController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al adoptar las reservas: " + e.getMessage(), e);
         }
     }
+
+    @PutMapping("/cleanupExpiredReservations")
+    public void cleanupExpiredReservations(@RequestBody Map<String, Object> body) {  // Endpoint para limpiar reservas expiradas TTL
+        String ticketToken = (String) body.get("ticketToken");
+        this.reservasService.cleanupExpiredReservations(ticketToken);
+    }
 }
 

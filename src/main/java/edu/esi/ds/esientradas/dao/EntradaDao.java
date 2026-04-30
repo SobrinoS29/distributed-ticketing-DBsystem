@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import edu.esi.ds.esientradas.model.Entrada;
 import edu.esi.ds.esientradas.model.Estado;
+import jakarta.transaction.Transactional;
 
 public interface EntradaDao extends JpaRepository<Entrada, Long> {
     List<Entrada> findByEspectaculoId(Long espectaculoId);
@@ -41,4 +42,13 @@ public interface EntradaDao extends JpaRepository<Entrada, Long> {
                     AND z.zona = :zona
                     AND e.id = z.id""", nativeQuery = true)
     List<Object[]> findByEspectaculoIdByZonaAndEstado(@Param("espectaculoId") Long espectaculoId, @Param("zona") Integer zona);
+
+    @Transactional
+    @Modifying
+    @Query(value = """
+        UPDATE entrada
+        SET estado = 'DISPONIBLE'
+        WHERE estado = 'RESERVADA'
+        AND id NOT IN (SELECT entrada_id FROM ticket_token)""", nativeQuery = true)
+    void liberarEntradasHuerfanas();  // Libera entradas reservadas sin token asociado (tokens expirados)
 }

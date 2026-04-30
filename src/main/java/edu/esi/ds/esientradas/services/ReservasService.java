@@ -74,4 +74,10 @@ public class ReservasService {
         }
         return this.ticketTokenDao.adoptReservations(ticketToken, newUserToken);
     }
+
+    @Transactional
+    public void cleanupExpiredReservations(String ticketToken) {
+        this.ticketTokenDao.deleteExpiredTokens(ticketToken);  // Elimina tokens expirados
+        this.entradaDao.liberarEntradasHuerfanas();  // Libera entradas reservadas sin token asociado (tokens expirados)
+    }
 }
