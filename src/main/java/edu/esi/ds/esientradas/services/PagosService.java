@@ -24,10 +24,6 @@ public class PagosService {
     @Autowired
     private PagoDao pagoDao;  // Guardar en la BD el pago preparado, con su ID, cantidad, etc.
 
-    @Autowired
-    private PDFService pdfService;
-    @Autowired
-    private EmailService emailService;
 
     public String prepararPago(Long centimos) throws Exception {  // Cogeremos la Secret Key del a BD y nos comunicaremos con la pasarela de pago (Stripe) para preparar el pago, utilizando la información del pago que se pasa en el body del request
         Stripe.apiKey = this.configuracionDao.findByClave("STRIPE_SECRET_KEY");

@@ -86,5 +86,21 @@ public class ReservasController {
         String ticketToken = (String) body.get("ticketToken");
         this.reservasService.cleanupExpiredReservations(ticketToken);
     }
+
+
+    @PutMapping("/updateTicketsAsSold")
+    public int updateTicketsAsSold(@RequestBody Map<String, Object> body) {  // Marcaremos los tickets de una reserva como vendidos después de la compra
+        String ticketToken = (String) body.get("ticketToken");
+        
+        try {
+            if(this.reservasService.updateTicketsAsSold(ticketToken) != 0) {  // Si se actualizaron las entradas asociadas al token de reserva
+                this.reservasService.cleanupExpiredReservations(ticketToken);  // Elimina tokens expirados (los tokens asociados a entradas ya vendidas)
+                return 1;
+            }
+            return 0;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error al actualizar los tickets como vendidos: " + e.getMessage(), e);
+        }
+    }
 }
 

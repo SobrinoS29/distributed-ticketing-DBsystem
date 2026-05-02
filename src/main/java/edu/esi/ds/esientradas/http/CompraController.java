@@ -65,6 +65,7 @@ public class CompraController {
 
     @PostMapping("/enviarEmailCompra")
     public void enviarEmailCompra(@RequestBody Map<String, Object> payload) throws JsonProcessingException {
+        String paymentIntentId = (String) payload.get("paymentIntentId");
         String userToken = (String) payload.get("userToken");
         Object entradasSeleccionadas = payload.get("ticketsSeleccionados");
         
@@ -72,5 +73,6 @@ public class CompraController {
 
         Object[] userInfoEmail = this.usuariosService.getUserInfoEmail(userToken);  // Obtener la información para enviar el email del usuario a partir de su token para enviarlo al servicio de email
         this.emailService.enviarEmailCompra(userInfoEmail, entradasJson);
+        this.emailService.saveEmailPagoData(paymentIntentId, userInfoEmail, entradasJson);
     }
 }

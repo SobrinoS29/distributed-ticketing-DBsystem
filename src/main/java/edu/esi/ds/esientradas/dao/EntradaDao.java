@@ -51,4 +51,13 @@ public interface EntradaDao extends JpaRepository<Entrada, Long> {
         WHERE estado = 'RESERVADA'
         AND id NOT IN (SELECT entrada_id FROM ticket_token)""", nativeQuery = true)
     void liberarEntradasHuerfanas();  // Libera entradas reservadas sin token asociado (tokens expirados)
+
+    @Transactional
+    @Modifying
+    @Query(value = """
+        UPDATE entrada e
+        JOIN ticket_token tt ON e.id = tt.entrada_id
+        SET e.estado = 'VENDIDA'
+        WHERE tt.token_reserva = :ticketToken""", nativeQuery = true)
+    int updateEstadoByTicketToken(@Param("ticketToken") String ticketToken);  // Marcamos como 'VENDIDAS' las entradas asociadas a un token de reserva
 }

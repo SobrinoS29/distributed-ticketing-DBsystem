@@ -80,4 +80,12 @@ public class ReservasService {
         this.ticketTokenDao.deleteExpiredTokens(ticketToken);  // Elimina tokens expirados
         this.entradaDao.liberarEntradasHuerfanas();  // Libera entradas reservadas sin token asociado (tokens expirados)
     }
+
+    @Transactional
+    public int updateTicketsAsSold(String ticketToken) {
+        if (ticketToken == null || ticketToken.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ticketToken es requerido");
+        }
+        return this.entradaDao.updateEstadoByTicketToken(ticketToken);
+    }
 }

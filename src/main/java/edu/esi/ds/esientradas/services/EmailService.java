@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.text.NumberFormat;
@@ -19,16 +20,32 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.Base64;
 
 import edu.esi.ds.esientradas.dao.ConfiguracionDao;
+import edu.esi.ds.esientradas.dao.EscenarioDao;
+import edu.esi.ds.esientradas.dao.EspectaculoDao;
+import edu.esi.ds.esientradas.dao.HistoricalDataPayDao;
+import edu.esi.ds.esientradas.dao.PagoDao;
+import edu.esi.ds.esientradas.model.Escenario;
+import edu.esi.ds.esientradas.model.Espectaculo;
+import edu.esi.ds.esientradas.model.HistoricalDataPay;
+import edu.esi.ds.esientradas.model.Pago;
 
 @Service
 public class EmailService {
 
     @Autowired
     private ConfiguracionDao configuracionDao;
-
+    @Autowired
+    private HistoricalDataPayDao historicalDataPayDao;
+    @Autowired
+    private EspectaculoDao espectaculoDao;
+    @Autowired
+    private EscenarioDao escenarioDao;
+    @Autowired
+    private PagoDao pagoDao;
+    
+    
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -99,9 +116,7 @@ public class EmailService {
         int totalEntradas = 0;
 
         try {
-            JsonNode root = objectMapper.readTree(
-                    entradasJson == null || entradasJson.isBlank() ? "[]" : entradasJson
-            );
+            JsonNode root = objectMapper.readTree(entradasJson == null || entradasJson.isBlank() ? "[]" : entradasJson);
 
             JsonNode array = root.isArray() ? root : objectMapper.createArrayNode().add(root);
 
@@ -201,5 +216,52 @@ public class EmailService {
                 .replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;");
+    }
+
+    public void saveEmailPagoData(String paymentIntentId, Object[] userInfoEmail, String entradasJson) {
+        String userName = (userInfoEmail.length > 0 && userInfoEmail[0] != null) ? userInfoEmail[0].toString() : "Cliente";
+        String userEmail = (userInfoEmail.length > 1 && userInfoEmail[1] != null) ? userInfoEmail[1].toString() : "";
+        String userId = (userInfoEmail.length > 2 && userInfoEmail[2] != null) ? userInfoEmail[2].toString() : "";
+        int totalCentimos = 0;
+        String totalEntradas = "";
+        int espectaculoId = 0;
+        int escenarioId = 0;
+
+        try {
+            JsonNode root = objectMapper.readTree(entradasJson == null || entradasJson.isBlank() ? "[]" : entradasJson);
+            JsonNode array = root.isArray() ? root : objectMapper.createArrayNode().add(root);
+            for (JsonNode entrada : array) {
+                int entradaId = entrada.path("entradaId").asInt(0);
+                int zona = entrada.path("zona").asInt(0);
+                int precioCentimos = entrada.hasNonNull("precioCentimos")
+                        ? entrada.path("precioCentimos").asInt(0)
+                        : entrada.path("precio").asInt(0);
+                espectaculoId = entrada.path("espectaculoId").asInt(0);
+                escenarioId = entrada.path("escenarioId").asInt(0);
+
+                totalEntradas += entradaId + " (Zona:" + getZonaNombrePorId(zona) + "), ";
+                totalCentimos += precioCentimos;
+            }
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error al procesar el JSON de entradas", e);
+        }
+
+        Pago pago = pagoDao.findByPaymentIntentId(paymentIntentId);
+        if (pago == null)
+            throw new IllegalStateException("No existe un pago con paymentIntentId=" + paymentIntentId);
+        Espectaculo espectaculo = espectaculoDao.findById((long) espectaculoId).orElseThrow(() -> new IllegalStateException());
+        Escenario escenario = escenarioDao.findById((long) escenarioId).orElseThrow(() -> new IllegalStateException());
+
+        HistoricalDataPay historicalDataPay = new HistoricalDataPay();
+        historicalDataPay.setPago(pago);
+        historicalDataPay.setUserId(userId);
+        historicalDataPay.setUserName(userName);
+        historicalDataPay.setUserEmail(userEmail);
+        historicalDataPay.setTotalCentimos(totalCentimos);
+        historicalDataPay.setEspectaculo(espectaculo);
+        historicalDataPay.setEscenario(escenario);
+        historicalDataPay.setTotalEntradas(totalEntradas);
+
+        historicalDataPayDao.save(historicalDataPay);
     }
 }
