@@ -60,4 +60,28 @@ public class EmailController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al enviar email: " + e.getMessage(), e);
         }
     }
+
+    @PostMapping("/enviar-verificacion-email")
+    public Map<String, String> enviarVerificacionEmail(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String verificationToken = request.get("verificationToken");
+        String frontendUrl = request.get("frontendUrl");
+
+        if (email == null || email.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error 400: Email is required");
+        }
+        if (verificationToken == null || verificationToken.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error 400: Verification token is required");
+        }
+        if (frontendUrl == null || frontendUrl.trim().isEmpty()) {
+            frontendUrl = "https://localhost:4200";
+        }
+
+        try {
+            this.emailService.enviarEmailVerificacion(email.trim(), verificationToken, frontendUrl);
+            return Map.of("message", "Email de verificación enviado correctamente");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al enviar email: " + e.getMessage(), e);
+        }
+    }
 }
